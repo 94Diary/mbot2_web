@@ -14,11 +14,20 @@ export class TelemetryStore {
     this.nextEventId = 1;
     this.rosNodeRunning = false;
     this.rosError = null;
+    this.readTopics = null;
   }
 
   setRosStatus(running, error = null) {
     this.rosNodeRunning = Boolean(running);
     this.rosError = error;
+  }
+
+  setTopicReader(readTopics) {
+    this.readTopics = readTopics;
+  }
+
+  topics() {
+    return this.readTopics?.() ?? null;
   }
 
   ingest(topic, raw) {
@@ -66,8 +75,21 @@ export class TelemetryStore {
     return { received_at: this.teamReceivedAt, data: copy(this.teamData) };
   }
 
-  events(limit = 50, afterId = null) {
-    const items = afterId === null ? this.eventItems : this.eventItems.filter((item) => item.id > afterId);
+  goals() {
+    const { goal } = this.teamData;
+    const items = goal ? [copy(goal)] : [];
+    return {
+      received_at: this.teamReceivedAt,
+      fresh: this.health().team_state_fresh,
+      found: items.length > 0,
+      found_count: items.length,
+      items,
+    };
+  }
+
+  events(limit = 50, afterId = null, robot = null) {
+    const items = this.eventItems.filter((item) =>
+      (afterId === null || item.id > afterId) && (robot === null || item.robot === robot));
     return copy(items.slice(-limit));
   }
 

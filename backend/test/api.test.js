@@ -74,3 +74,41 @@ test('websocket authenticates before upgrade and never echoes the token', async 
     client.close();
   }
 });
+
+test('lists topics discovered by ROS and reports an unavailable bridge', async () => {
+  assert.equal((await fetch(`${baseUrl}/api/topics`, { headers })).status, 503);
+  const topics = [{ name: '/maze_team/state', types: ['std_msgs/msg/String'] }];
+  app.store.setTopicReader(() => topics);
+  try {
+    const response = await fetch(`${baseUrl}/api/topics`, { headers });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { items: topics });
+  } finally {
+    app.store.setTopicReader(null);
+  }
+});
+
+test('filters events by robot before applying the limit', async () => {
+  for (const robot of ['mbot1', 'mbot2', 'mbot2']) {
+    app.store.ingest('/maze_team/report', JSON.stringify({ robot, type: 'BRANCH_REQUEST' }));
+  }
+  const response = await fetch(`${baseUrl}/api/events?robot=mbot1&limit=1`, { headers });
+  assert.equal(response.status, 200);
+  const { items } = await response.json();
+  assert.deepEqual(items.map(({ robot }) => robot), ['mbot1']);
+  assert.equal((await fetch(`${baseUrl}/api/events?robot=mbot1&robot=mbot2`, { headers })).status, 400);
+});
+
+test('reports goal discovery and the freshness of the team state', async () => {
+  const url = `${baseUrl}/api/goals`;
+  const initial = await fetch(url, { headers }).then((response) => response.json());
+  assert.equal(initial.found_count, 0);
+  assert.equal(initial.fresh, false);
+  const goal = { robot: 'mbot3', x: -1, y: 2 };
+  app.store.ingest('/maze_team/state', JSON.stringify({ goal }));
+  const result = await fetch(url, { headers }).then((response) => response.json());
+  assert.equal(result.found, true);
+  assert.equal(result.found_count, 1);
+  assert.equal(result.fresh, true);
+  assert.deepEqual(result.items, [goal]);
+});

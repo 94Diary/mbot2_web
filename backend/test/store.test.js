@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { TelemetryStore } from '../src/store.js';
+import { TelemetryStore } from '../src/modules/telemetry/store.js';
 
 test('team snapshot and freshness', () => {
   const store = new TelemetryStore();
