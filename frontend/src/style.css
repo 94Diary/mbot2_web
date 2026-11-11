@@ -1,0 +1,52 @@
+:root { font-family: Inter, "Segoe UI", Tahoma, sans-serif; color: #eaf0fa; background: #0b1220; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.dashboard { max-width: 1180px; margin: auto; padding: 38px 28px 30px; }
+.topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 30px; }
+.eyebrow { color: #58c7f5; letter-spacing: .2em; font-size: 11px; font-weight: 800; }
+h1 { font-size: clamp(30px, 5vw, 44px); margin: 8px 0 6px; letter-spacing: -.04em; }
+.topbar p, .muted, footer { color: #8d9bb0; }
+.topbar p { margin: 0; }
+.status-pill { white-space: nowrap; border-radius: 999px; border: 1px solid #3b465a; background: #1a2639; padding: 10px 15px; font-size: 12px; color: #b1bdd0; }
+.status-pill.online { color: #80e0ba; border-color: #2a6958; background: #102d2a; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; margin-right: 7px; }
+.notice { border: 1px solid #865e34; background: #392a20; border-radius: 10px; color: #ffcca0; padding: 12px 16px; margin-bottom: 18px; }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.metric, .panel { border: 1px solid #26364c; border-radius: 16px; background: #111d2e; box-shadow: 0 10px 30px #02091333; }
+.metric { display: flex; flex-direction: column; padding: 20px 22px; min-height: 132px; }
+.metric span, .metric small { color: #96a5b9; }
+.metric span { font-size: 13px; }
+.metric strong { font-size: 34px; line-height: 1.2; margin: 7px 0; }
+.metric .goal-state { font-size: 25px; margin-top: 14px; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.panel { padding: 22px; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #27374c; padding-bottom: 16px; margin-bottom: 16px; }
+.panel-heading h2 { margin: 0; font-size: 18px; }
+.panel-heading > span { color: #6790ae; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.robot-list { display: grid; gap: 12px; }
+.robot-card { display: flex; gap: 14px; align-items: center; border: 1px solid #2b3d55; border-radius: 12px; padding: 15px; background: #17253a; }
+.robot-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #1e4661; color: #84d9fa; font-weight: 800; }
+.robot-details { flex: 1; min-width: 0; }
+.robot-title { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.robot-title h3 { margin: 0; font-size: 15px; }
+.robot-card p { margin: 7px 0 0; color: #9caec4; font-size: 12px; }
+.tag { background: #303c4c; color: #a7b6c8; border-radius: 999px; padding: 4px 8px; font-size: 10px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.tag.active { background: #164944; color: #9eebca; }
+.goal-card, .empty-card { border-radius: 12px; padding: 18px; min-height: 100px; }
+.goal-card { display: flex; flex-direction: column; gap: 5px; background: #164337; border: 1px solid #286652; }
+.goal-card span { color: #84dfb4; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.goal-card strong { font-size: 16px; }
+.goal-card small { color: #b2e8ce; }
+.empty-card { background: #182840; border: 1px dashed #36506c; color: #a2b4c9; display: flex; align-items: center; font-size: 13px; }
+.subheading { margin: 24px 0 10px; font-size: 14px; }
+.junction-list { max-height: 200px; overflow: auto; }
+.junction { display: flex; justify-content: space-between; gap: 8px; padding: 9px 0; border-bottom: 1px solid #27374c; color: #a5b5ca; font-size: 13px; }
+.junction span:first-child { color: #e1eaf5; }
+.event-panel { margin-top: 16px; }
+.event-list { padding: 0; margin: 0; list-style: none; max-height: 280px; overflow: auto; }
+.event-list li { display: grid; grid-template-columns: 100px 90px 1fr; gap: 12px; align-items: start; padding: 11px 2px; border-bottom: 1px solid #27374c; font-size: 13px; }
+.event-time { color: #8495aa; }
+.event-robot { color: #71d5f5; font-weight: 700; }
+.event-text { overflow-wrap: anywhere; }
+footer { font-size: 11px; margin-top: 20px; text-align: center; }
+@media (max-width: 700px) { .dashboard { padding: 24px 16px; } .topbar { flex-direction: column; } .metrics { grid-template-columns: 1fr; } .columns { grid-template-columns: 1fr; } .event-list li { grid-template-columns: 70px 60px 1fr; gap: 8px; font-size: 11px; } }

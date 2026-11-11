@@ -35,6 +35,11 @@ although Gazebo and the existing robot ROS nodes still use Python.
 
 ## Start the backend (Ubuntu terminal in VS Code)
 
+Copy `backend/.env.example` to `backend/.env` once. Generate a token with
+`node -p "require('node:crypto').randomBytes(32).toString('hex')"` and paste it
+into `MBOT2_API_TOKEN` in that file. Git ignores `.env`. The backend starts
+only with a valid token and binds to a loopback address.
+
 ```bash
 cd ~/mBot2_web/backend
 export PATH=/home/knkzu/.local/node-v24.21.0-linux-x64/bin:$PATH
@@ -44,7 +49,8 @@ npm ci                 # once, or after package-lock.json changes
 npm start
 ```
 
-Keep this terminal open. Check `http://localhost:8000/api/health`; if
+Keep this terminal open. Check `GET http://localhost:8000/api/health` with
+the `Authorization: Bearer <token>` header. If
 `ros_node_running` is false, inspect `ros_error` and confirm ROS was sourced.
 
 ## Start the frontend (VS Code PowerShell terminal)
@@ -59,6 +65,12 @@ Open `http://localhost:5173`. Start Gazebo / the multi-robot launch in another
 Ubuntu terminal. The page can open without Gazebo but will say it is waiting
 for ROS 2 until `/maze_team/state` arrives. Vite proxies `/api` and `/ws` to
 the Express backend on port 8000.
+
+The current frontend still needs to pass the telemetry token before it can read
+the secured API. HTTP clients use the Bearer header. Browser WebSocket clients
+offer the protocols `mbot2.telemetry.v1` and `mbot2.token.<token>`. The server
+selects only `mbot2.telemetry.v1`. Keep the token out of frontend source code
+and URLs.
 
 ## API
 

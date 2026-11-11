@@ -1,0 +1,21 @@
+{
+  "name": "mbot2-ros-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.20.2"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "rclnodejs": "2.2.0",
+    "ws": "8.22.0"
+  },
+  "allowScripts": {
+    "rclnodejs@2.2.0": true
+  }
+}
