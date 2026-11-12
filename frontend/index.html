@@ -1,9 +1,23 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" class="theme-dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mBot2 Mission Monitor</title>
+    <title>mBot2 Maze Ops</title>
+    <meta name="description" content="คอนโซลฝูงหุ่น mBot2 สำรวจเขาวงกต: รันซิม ดูแผนที่สด และบันทึกภารกิจ" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        var t = localStorage.getItem('mbot2.theme');
+        var dark = t ? t === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches;
+        document.documentElement.className = dark ? 'theme-dark' : 'theme-light';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

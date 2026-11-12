@@ -1,97 +1,98 @@
-# mBot2 Mission Monitor
+# mBot2 Maze Ops
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full mBot2 → ROS 2 → web flow,
-tool list, topic map and current-vs-future scope.
+เว็บคอนโซลและห้องเรียนของฝูงหุ่น mBot2 สำรวจเขาวงกต: กดรันซิม Gazebo จากเว็บ ดูแผนที่และ log ของหุ่นแบบสด
+บันทึกภารกิจไว้ดูย้อนหลัง บทเรียน 13 บท หน้ารู้จักหุ่นแบบ 3D และหลังบ้านครบ (ผู้ใช้ บทเรียน ประกาศ ข้อความติดต่อ
+สถานะระบบ เครื่องรันซิม สำรองข้อมูล ตั้งค่าเว็บ Audit log)
 
-This project has a **JavaScript backend** in Ubuntu WSL
-(`~/mBot2_web/backend`, Express + rclnodejs) and a React frontend on Windows
-(`C:\Users\knkzu\Desktop\mBot2_web\frontend`, Vite). The backend reads ROS 2
-Humble topics in Ubuntu 22.04 / WSL and sends telemetry to the browser. It cannot send motor
-commands; there is no `/cmd_vel` publisher or control API.
+- เฟส 2 (หน้าสาธารณะ บทเรียน 3D หลังบ้านที่เหลือ): [spec](docs/superpowers/specs/2026-11-12-maze-ops-phase2-design.md)
 
-## Data flow
+- ระบบเฟส 1 ทั้งหมด **รันบนเครื่องเดียว (Ubuntu 22.04 / WSL)** ดูเหตุผลและขอบเขตใน
+  [docs/superpowers/specs/2026-11-12-maze-ops-phase1-design.md](docs/superpowers/specs/2026-11-12-maze-ops-phase1-design.md)
+- ภาพรวมการออกแบบทั้งหมด (mockup, บทบาท, API เต็ม) อยู่ใน [docs/](docs/README.md)
+- สถาปัตยกรรม ROS 2 ↔ เว็บ: [ARCHITECTURE.md](ARCHITECTURE.md)
 
-`Gazebo / maze_solver → ROS 2 topics → rclnodejs → Express + WebSocket → React`
+## สถาปัตยกรรม
 
-The backend subscribes to `/maze_team/state`, `/maze_team/report`,
-`/maze_team/decision`, and `/mbot1/trail` through `/mbot3/trail`. Team state
-contains robot positions, discovered junctions and a shared goal. Recent events
-are kept in memory only (up to 500), so restarting the backend clears them.
-
-## What teammates need
-
-- Ubuntu 22.04 / WSL with ROS 2 Humble and the built `~/ros2_ws` workspace.
-- Node.js 24 LTS **inside Ubuntu** for `~/mBot2_web/backend`; the Windows Node.js binary
-  cannot load ROS 2's Linux native libraries. On this computer it is installed
-  at `/home/knkzu/.local/node-v24.21.0-linux-x64`.
-- Node.js with npm on Windows for `frontend/` (already installed here).
-- VS Code is just the editor. Open the backend using VS Code's WSL connection
-  and the frontend folder from Windows, or use separate Ubuntu/PowerShell terminals.
-
-The JavaScript packages are `express`, `rclnodejs`, `ws`, `react`, `react-dom`,
-`vite`, and `@vitejs/plugin-react`. The frontend uses built-in `fetch` and
-`WebSocket`; Axios is not installed. Python is **not** needed for this web app,
-although Gazebo and the existing robot ROS nodes still use Python.
-
-## Start the backend (Ubuntu terminal in VS Code)
-
-Copy `backend/.env.example` to `backend/.env` once. Generate a token with
-`node -p "require('node:crypto').randomBytes(32).toString('hex')"` and paste it
-into `MBOT2_API_TOKEN` in that file. Git ignores `.env`. The backend starts
-only with a valid token and binds to a loopback address.
-
-```bash
-cd ~/mBot2_web/backend
-export PATH=/home/knkzu/.local/node-v24.21.0-linux-x64/bin:$PATH
-source /opt/ros/humble/setup.bash
-source ~/ros2_ws/install/setup.bash
-npm ci                 # once, or after package-lock.json changes
-npm start
+```
+React + Vite (frontend/)  ──fetch /api/v1, WS /ws/telemetry──▶  Express (backend/)
+                                                                  ├─ auth/      บัญชี session cookie + สิทธิ์ตาม docs/roles-permissions.md
+                                                                  ├─ sim/       ตัวสั่งซิม: รันได้เฉพาะ colcon build / ros2 launch ที่อนุญาต
+                                                                  ├─ console/   ประสานซิม ↔ telemetry ↔ recorder
+                                                                  ├─ missions/  บันทึกภารกิจ + map model เดียวใช้ทั้งสดและย้อนหลัง
+                                                                  ├─ admin/     หลังบ้าน (ผู้ใช้ ประกาศ ตั้งค่า dashboard)
+                                                                  ├─ content/   บทเรียน + ค้นหา (โครง 13 บทใส่ให้ตอนตารางว่าง)
+                                                                  ├─ contact/   ฟอร์มติดต่อ + ความยินยอมคุกกี้ (PDPA)
+                                                                  ├─ system/    สถานะระบบ เครื่องรันซิม สำรอง/กู้คืน (03:00 ทุกวัน)
+                                                                  ├─ modules/telemetry/  rclnodejs subscribe topic ของทีม (อ่านอย่างเดียว)
+                                                                  └─ db/        SQLite (node:sqlite) · audit_log แก้/ลบไม่ได้
+                                                                        │ child_process (process group)
+                                                                        ▼
+                                                    ros2 launch mbot2_description two_mbot2.launch.py world:=…
 ```
 
-Keep this terminal open. Check `GET http://localhost:8000/api/health` with
-the `Authorization: Bearer <token>` header. If
-`ros_node_running` is false, inspect `ros_error` and confirm ROS was sourced.
+backend **ไม่มี** publisher `/cmd_vel` หรือคำสั่งมอเตอร์ใดๆ ปุ่ม "หยุดทุกตัว" ปิด process ของ launch ทั้งกลุ่ม
 
-## Start the frontend (VS Code PowerShell terminal)
+## ต้องมีในเครื่อง
 
-```powershell
-cd C:\Users\knkzu\Desktop\mBot2_web\frontend
-npm ci                 # once, or after package-lock.json changes
+- Ubuntu 22.04 (WSL2) + ROS 2 Humble + Gazebo Fortress
+- โค้ดหุ่นใน `~/ros2_ws` ที่ build แล้ว (branch ที่ launch รับ `world:=`)
+- Node.js ≥ 22.13 **ใน Ubuntu** (เช่นผ่าน nvm) · Node ของ Windows โหลดไลบรารี ROS ของ Linux ไม่ได้
+
+## ตั้งค่าครั้งแรก
+
+```bash
+cd ~/mbot2_web/backend
+npm ci
+cp .env.example .env          # แก้ MBOT2_WS_PATH ให้ชี้ ros2_ws ของเครื่องนี้
+npm run create-owner -- --email you@example.com --name "ชื่อของคุณ"   # ถามรหัสผ่านทาง stdin
+
+cd ~/mbot2_web/frontend
+npm ci
+```
+
+ฐานข้อมูลอยู่ที่ `backend/data/mbot2.db` และไฟล์สำรองที่ `backend/backups/` (git ignore ทั้งคู่) · สมาชิกคนอื่นสมัครด้วยรหัสเชิญจากหลังบ้าน › ผู้ใช้ › เชิญผู้ใช้
+
+## รันทุกครั้ง (2 terminal)
+
+```bash
+# Terminal 1: backend (ต้อง source ROS ก่อน)
+cd ~/mbot2_web/backend
+source /opt/ros/humble/setup.bash && source ~/ros2_ws/install/setup.bash
+npm start
+
+# Terminal 2: frontend
+cd ~/mbot2_web/frontend
 npm run dev
 ```
 
-Open `http://localhost:5173`. Start Gazebo / the multi-robot launch in another
-Ubuntu terminal. The page can open without Gazebo but will say it is waiting
-for ROS 2 until `/maze_team/state` arrives. Vite proxies `/api` and `/ws` to
-the Express backend on port 8000.
+เปิด http://127.0.0.1:5173 → เข้าสู่ระบบ → คอนโซล › เชื่อมหุ่น → รันซิม
+ไม่ต้องเปิด Gazebo เอง เว็บสั่ง `ros2 launch` ให้ · กด Ctrl+C ที่ backend จะปิดซิมที่รันอยู่ก่อนปิดตัว
 
-The current frontend still needs to pass the telemetry token before it can read
-the secured API. HTTP clients use the Bearer header. Browser WebSocket clients
-offer the protocols `mbot2.telemetry.v1` and `mbot2.token.<token>`. The server
-selects only `mbot2.telemetry.v1`. Keep the token out of frontend source code
-and URLs.
+## ทดสอบ
 
-## API
+```bash
+cd backend && npm test        # node:test: auth, สิทธิ์ 401/403, ตัวสั่งซิม (spawner ปลอม), ภารกิจ, หลังบ้าน, WebSocket
+cd frontend && npm run build
+```
 
-| Endpoint | Purpose |
+## API (สรุป · prefix `/api/v1`)
+
+| กลุ่ม | endpoint |
 |---|---|
-| `GET /api/health` | Backend/ROS status and age of the latest team state |
-| `GET /api/team` | Latest team snapshot: robots, junctions, goal |
-| `GET /api/events?limit=50&after_id=0` | Recent report, decision and trail events |
-| `WS /ws/telemetry` | Snapshot every 0.5 seconds |
+| บัญชี | `POST /auth/login` · `POST /auth/register` · `POST /auth/logout` · `GET /me` · `POST /me/password` |
+| ซิม | `GET /sim/worlds` · `GET /sim/state` · `POST /sim/preview` · `POST /sim/start` · `POST /sim/stop` |
+| ภารกิจ | `GET /mission/current` · `POST /mission/save` · `POST /mission/discard` · `GET/PATCH/DELETE /missions/:id` · `GET /missions` · `GET/PUT /me/robot-prefs` |
+| telemetry | `GET /telemetry/{health,team,paths,goals,topics,events,logs}` · `WS /ws/telemetry` |
+| หลังบ้าน | `/admin/{dashboard,users,invites,roles,missions,announcements,settings,audit}` |
+| สาธารณะ | `GET /site` · `GET /site/status` · `GET /announcements/active` · `GET /lessons` · `GET /lessons/:slug` · `POST/DELETE /lessons/:id/progress` · `GET /search` · `POST /contact` · `POST /consent` |
+| หลังบ้าน (เฟส 2) | `/admin/{lessons,messages,system,machine,backups}` |
 
-If `/api/team` has `received_at: null`, check
-`ros2 topic echo /maze_team/state` in Ubuntu. The JavaScript API can be tested
-without Gazebo using `cd backend && npm test` (five API/store tests).
+ผิดพลาดตอบ `{ "error": { "code", "message", "fields?" } }` · รายการตอบ `{ items, total, page, page_size }` (page_size 10/20/30/50)
 
-## Constraints
+## ข้อจำกัดเฟส 1
 
-- One local backend process. Data is kept in memory, not in a database.
-- Backend binds to `127.0.0.1`; do not expose it publicly without adding
-  authentication and HTTPS.
-- Physical mBot2 robots will need ROS 2 drivers and localization to produce
-  the same shared topics; Gazebo's ground-truth coordinates do not exist on
-  the physical robot.
-# mbot2_web
-# mbot2_web
+- เว็บและซิมอยู่เครื่องเดียว bind `127.0.0.1` เท่านั้น ยังไม่ใช่เว็บสาธารณะ (ไม่มี HTTPS, 2FA, CAPTCHA ตอนล็อกอิน, อีเมล, ลืมรหัสผ่าน)
+- บทเรียนเป็นโครงหัวข้อ ทีมเติมเนื้อหาในหลังบ้าน › บทเรียน
+- สำรองข้อมูลอยู่ในเครื่องเดียวกับเว็บ ควรคัดลอก `backend/backups/` ไปเก็บที่อื่นเป็นระยะ
+- แบตเตอรี่และการสลับโหมดสำรวจ/ตัดทางรอโค้ดหุ่นส่ง topic เพิ่ม (docs/robot-code-changes.md)
+- หุ่นจริงยังไม่รองรับ

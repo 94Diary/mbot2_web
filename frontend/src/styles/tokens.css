@@ -1,0 +1,47 @@
+/* Design tokens จาก docs/design-tokens.md · สลับธีมด้วย class บน <html> */
+:root {
+  --font-head: 'Prompt', 'IBM Plex Sans Thai', sans-serif;
+  --font-body: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --r-card: 22px;
+  --r-modal: 26px;
+  --r-field: 14px;
+  --r-small: 12px;
+  --r-pill: 999px;
+  --shadow-plastic: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+  --shadow-menu: 0 18px 40px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.35);
+  --shadow-drawer: -20px 0 50px rgba(0, 0, 0, 0.3);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --bot-1: #ff6b1a;
+  --bot-2: #1b9bd1;
+  --bot-3: #b6e33c;
+}
+
+.theme-dark {
+  --bg: #121417; --panel: rgba(34, 38, 45, 0.74); --solid: #1a1e25; --raise: #272c34;
+  --line: rgba(255, 255, 255, 0.11); --line-2: rgba(255, 255, 255, 0.07); --line-strong: rgba(255, 255, 255, 0.22);
+  --ink: #f2f4f7; --ink-2: #cdd2da; --ink-3: #aab1bc; --ink-4: #808894; --muted: #5e6672; --grid: #1c2026;
+  --orange: #ff6b1a; --orange-ink: #ff8a47; --orange-soft: #2a1608; --orange-line: #6b3410; --orange-soft-ink: #ffd2b3;
+  --blue: #1b9bd1; --blue-fill: #0a7fb2; --blue-ink: #5cc8f0; --blue-soft: #0e3346;
+  --go: #2bd48a; --go-soft: #0f3b26; --go-line: #1e6b47;
+  --warn: #ffb224; --warn-soft: #3d2a05; --warn-line: #6b4a0c;
+  --red: #e5251b; --red-ink: #ff6b5e; --red-soft: #3a0f0b;
+  --lime: #b6e33c; --lime-ink: #b6e33c;
+  --chip: #eef1f5; --chip-ink: #14161a; --overlay: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+.theme-light {
+  --bg: #e8ebef; --panel: rgba(255, 255, 255, 0.78); --solid: #ffffff; --raise: #dce1e7;
+  --line: #d2d8df; --line-2: #e0e5ea; --line-strong: #b6bec8;
+  --ink: #14161a; --ink-2: #2f343b; --ink-3: #4b525c; --ink-4: #636a75; --muted: #96a0ab; --grid: #dadfe5;
+  --orange: #f0600f; --orange-ink: #b04400; --orange-soft: #ffe7d6; --orange-line: #f2b48c; --orange-soft-ink: #6e2a00;
+  --blue: #1b9bd1; --blue-fill: #0a7fb2; --blue-ink: #0a6e9c; --blue-soft: #d4ecf7;
+  --go: #127a4b; --go-soft: #ddf3e8; --go-line: #9bd8ba;
+  --warn: #8a5600; --warn-soft: #fcebcb; --warn-line: #e7c27c;
+  --red: #d7261e; --red-ink: #c21c12; --red-soft: #fbe1dd;
+  --lime: #b6e33c; --lime-ink: #4d7a00;
+  --chip: #ffffff; --chip-ink: #14161a; --overlay: rgba(20, 22, 26, 0.45);
+  color-scheme: light;
+}

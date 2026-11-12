@@ -1,14 +1,21 @@
+import { EventEmitter } from 'node:events';
+import { telemetryLogEntry } from './logs.js';
 import { RobotPaths } from './paths.js';
 
 const MAX_EVENTS = 500;
+const MAX_LOGS = 1000;
 const STALE_AFTER_MS = 3000;
 
 function copy(value) {
   return structuredClone(value);
 }
 
-export class TelemetryStore {
+/** Latest ROS telemetry. Emits `team` (data) on each team state and `log` (entry) on each log line. */
+export class TelemetryStore extends EventEmitter {
   constructor() {
+    super();
+    this.logItems = [];
+    this.nextLogId = 1;
     this.teamData = { robots: {}, junctions: [], goal: null };
     this.teamReceivedAt = null;
     this.teamReceivedMs = null;
@@ -50,8 +57,11 @@ export class TelemetryStore {
       this.paths.update(data);
       this.teamReceivedAt = receivedAt;
       this.teamReceivedMs = Date.now();
+      this.emit('team', this.teamData);
       return;
     }
+    const entry = telemetryLogEntry(topic, data);
+    if (entry) this.addLog(entry);
 
     this.eventItems.push({
       id: this.nextEventId++,
@@ -62,6 +72,28 @@ export class TelemetryStore {
       data: copy(data),
     });
     if (this.eventItems.length > MAX_EVENTS) this.eventItems.shift();
+  }
+
+  addLog(entry) {
+    const item = { id: this.nextLogId++, at: new Date().toISOString(), ...entry };
+    this.logItems.push(item);
+    if (this.logItems.length > MAX_LOGS) this.logItems.shift();
+    this.emit('log', item);
+    return item;
+  }
+
+  logs(limit = 200, afterId = null) {
+    return copy(this.logItems.filter((item) => afterId === null || item.id > afterId).slice(-limit));
+  }
+
+  /** Forget the previous run so a new sim starts from an empty map and log. */
+  resetRun() {
+    this.teamData = { robots: {}, junctions: [], goal: null };
+    this.teamReceivedAt = null;
+    this.teamReceivedMs = null;
+    this.eventItems = [];
+    this.logItems = [];
+    this.paths = new RobotPaths();
   }
 
   health() {
