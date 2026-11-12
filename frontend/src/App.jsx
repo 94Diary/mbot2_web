@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import RobotMap from './RobotMap.jsx';
 
 const ROBOT_NAMES = ['mbot1', 'mbot2', 'mbot3'];
 
@@ -11,7 +12,7 @@ function formatNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : '—';
 }
 
-function App() {
+function Dashboard({ token, onLogout }) {
   const [snapshot, setSnapshot] = useState(null);
   const [connection, setConnection] = useState('connecting');
   const [error, setError] = useState('');
@@ -23,9 +24,14 @@ function App() {
 
     async function loadInitial() {
       try {
+        const options = { headers: { Authorization: 'Bearer ' + token } };
         const [healthResponse, teamResponse, eventsResponse] = await Promise.all([
-          fetch('/api/health'), fetch('/api/team'), fetch('/api/events?limit=30'),
+          fetch('/api/health', options), fetch('/api/team', options), fetch('/api/events?limit=30', options),
         ]);
+        if (healthResponse.status === 401) {
+          if (active) setError('Token ไม่ตรงกับ backend กรุณาเปลี่ยน token');
+          return;
+        }
         if (![healthResponse, teamResponse, eventsResponse].every((response) => response.ok)) {
           throw new Error('Backend API ไม่พร้อมใช้งาน');
         }
@@ -33,7 +39,7 @@ function App() {
           healthResponse.json(), teamResponse.json(), eventsResponse.json(),
         ]);
         if (active) {
-          setSnapshot({ health, team, events: events.items || [] });
+          setSnapshot((previous) => previous ?? { health, team, events: events.items || [] });
           setError('');
         }
       } catch (cause) {
@@ -45,7 +51,9 @@ function App() {
       if (!active) return;
       setConnection('connecting');
       const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-      socket = new WebSocket(`${scheme}://${window.location.host}/ws/telemetry`);
+      socket = new WebSocket(scheme + '://' + window.location.host + '/ws/telemetry', [
+        'mbot2.telemetry.v1', 'mbot2.token.' + token,
+      ]);
       socket.onopen = () => {
         if (active) {
           setConnection('connected');
@@ -63,7 +71,7 @@ function App() {
       socket.onclose = () => {
         if (!active) return;
         setConnection('disconnected');
-        setError('การเชื่อมต่อสดหลุด กำลังเชื่อมใหม่…');
+        setError((current) => current || 'การเชื่อมต่อสดหลุด กำลังเชื่อมใหม่…');
         retryTimer = window.setTimeout(connect, 2000);
       };
       socket.onerror = () => socket.close();
@@ -76,7 +84,7 @@ function App() {
       window.clearTimeout(retryTimer);
       socket?.close();
     };
-  }, []);
+  }, [token]);
 
   const health = snapshot?.health || {};
   const team = snapshot?.team?.data || {};
@@ -93,9 +101,12 @@ function App() {
           <h1>Mission Monitor</h1>
           <p>ดูสถานะทีมสำรวจเขาวงกตจาก Gazebo แบบเรียลไทม์</p>
         </div>
+        <div className="header-actions">
         <div className={`status-pill ${connection === 'connected' && fresh ? 'online' : 'offline'}`}>
           <span className="dot" />
           {connection !== 'connected' ? 'กำลังเชื่อมต่อ backend' : fresh ? 'ข้อมูลสด' : 'รอข้อมูล ROS 2'}
+        </div>
+          <button type="button" onClick={onLogout}>เปลี่ยน token</button>
         </div>
       </header>
 
@@ -106,6 +117,8 @@ function App() {
         <div className="metric"><span>ทางแยกที่ค้นพบ</span><strong>{junctions.length}</strong><small>ข้อมูลที่หุ่นสำรวจพบ</small></div>
         <div className="metric"><span>เป้าหมาย</span><strong className="goal-state">{team.goal ? 'พบแล้ว' : 'ยังไม่พบ'}</strong><small>{team.goal ? `โดย ${team.goal.robot || 'หุ่นในทีม'}` : 'กำลังสำรวจ'}</small></div>
       </section>
+
+      <RobotMap token={token} team={team} fresh={fresh && connection === 'connected'} />
 
       <div className="columns">
         <section className="panel">
@@ -162,4 +175,22 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  const [token, setToken] = useState('');
+  if (token) return <Dashboard token={token} onLogout={() => setToken('')} />;
+
+  return (
+    <main className="dashboard">
+      <form className="panel token-form" onSubmit={(event) => {
+        event.preventDefault();
+        setToken(new FormData(event.currentTarget).get('token').trim());
+      }}>
+        <h1>Mission Monitor</h1>
+        <label htmlFor="token">Token ของ backend</label>
+        <input id="token" name="token" type="password" autoComplete="off" required
+          pattern="[0-9a-f]{64}" title="Token ต้องมี 64 ตัวอักษร ใช้ 0–9 และ a–f" />
+        <button type="submit">เชื่อมต่อ</button>
+      </form>
+    </main>
+  );
+}

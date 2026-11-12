@@ -1,3 +1,5 @@
+import { RobotPaths } from './paths.js';
+
 const MAX_EVENTS = 500;
 const STALE_AFTER_MS = 3000;
 
@@ -15,6 +17,7 @@ export class TelemetryStore {
     this.rosNodeRunning = false;
     this.rosError = null;
     this.readTopics = null;
+    this.paths = new RobotPaths();
   }
 
   setRosStatus(running, error = null) {
@@ -44,6 +47,7 @@ export class TelemetryStore {
     const receivedAt = new Date().toISOString();
     if (topic === '/maze_team/state' && !data.parse_error) {
       this.teamData = copy(data);
+      this.paths.update(data);
       this.teamReceivedAt = receivedAt;
       this.teamReceivedMs = Date.now();
       return;

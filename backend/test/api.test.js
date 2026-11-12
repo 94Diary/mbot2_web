@@ -112,3 +112,27 @@ test('reports goal discovery and the freshness of the team state', async () => {
   assert.equal(result.fresh, true);
   assert.deepEqual(result.items, [goal]);
 });
+
+test('path API filters robots, separates interrupted tracks and resets on a new run', async () => {
+  const frame = { east: '+x', north: '+y', distance_unit: 'm' };
+  const ingest = (run_id, robots) =>
+    app.store.ingest('/maze_team/state', JSON.stringify({ run_id, map_frame: frame, robots }));
+  const point = (x, y) => ({ x, y });
+  const read = async (query = '') => {
+    const response = await fetch(baseUrl + '/api/paths' + query, { headers });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+
+  ingest('first', { mbot1: point(0, 0), mbot2: point(0, 1) });
+  ingest('first', { mbot1: point(0.01, 0), mbot2: point(0, 1) });
+  ingest('first', { mbot2: point(0, 2) });
+  ingest('first', { mbot1: point(1, 0), mbot2: point(0, 2) });
+  assert.deepEqual(await read('?robot=mbot1'), {
+    run_id: 'first', map_frame: frame, robots: { mbot1: [[0, 0], null, [1, 0]] },
+  });
+  assert.deepEqual((await read()).robots.mbot2, [[0, 1], [0, 2]]);
+  assert.equal((await fetch(baseUrl + '/api/paths')).status, 401);
+  ingest('second', { mbot1: point(3, 3) });
+  assert.deepEqual((await read()).robots, { mbot1: [[3, 3]] });
+});
