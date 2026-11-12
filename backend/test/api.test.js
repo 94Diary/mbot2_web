@@ -1,113 +1,87 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { createApp } from '../src/app.js';
 import WebSocket from 'ws';
+import { createApp } from '../src/app.js';
+import { ORIGIN, client, loggedIn, makeUser, setSettings, startTestApp } from './helpers.js';
 
-const token = 'a'.repeat(64);
-const app = createApp(undefined, undefined, token);
-const headers = { Authorization: `Bearer ${token}` };
-let baseUrl;
+let t;
+let member;
+let c;
 before(async () => {
-  await new Promise((resolve) => app.server.listen(0, '127.0.0.1', resolve));
-  baseUrl = `http://127.0.0.1:${app.server.address().port}`;
+  t = await startTestApp();
+  member = await makeUser(t.db, 'tele');
+  c = await loggedIn(t.base, member);
 });
-after(() => app.close());
+after(() => t.close());
 
-test('HTTP endpoints keep the frontend contract', async () => {
-  const health = await fetch(`${baseUrl}/api/health`, { headers }).then((response) => response.json());
-  const team = await fetch(`${baseUrl}/api/team`, { headers }).then((response) => response.json());
-  const events = await fetch(`${baseUrl}/api/events`, { headers }).then((response) => response.json());
-  assert.equal(health.backend, 'ok');
-  assert.deepEqual(team.data.robots, {});
-  assert.deepEqual(events.items, []);
+const store = () => t.app.store;
+
+test('createApp needs a database', () => {
+  assert.throws(() => createApp({}), /database/);
+});
+
+test('guests can watch telemetry but cannot start a sim', async () => {
+  for (const path of ['health', 'team', 'paths', 'goals', 'events', 'logs']) {
+    assert.equal((await client(t.base).get(`/api/v1/telemetry/${path}`)).status, 200, path);
+  }
+  assert.equal((await client(t.base).post('/api/v1/sim/start', { count: 2, world: 'x' })).status, 401);
+  assert.equal((await client(t.base).get('/api/v1/sim/worlds')).status, 401);
+  assert.equal((await client(t.base).post('/api/v1/mission/save')).status, 401);
+  const health = await c.get('/api/v1/telemetry/health');
+  assert.equal(health.body.backend, 'ok');
+  assert.deepEqual((await c.get('/api/v1/telemetry/events')).body.items, []);
 });
 
 test('invalid event query gets a 400', async () => {
-  assert.equal((await fetch(`${baseUrl}/api/events?limit=201`, { headers })).status, 400);
+  assert.equal((await c.get('/api/v1/telemetry/events?limit=201')).status, 400);
 });
 
-test('telemetry rejects absent and wrong HTTP tokens', async () => {
-  assert.equal((await fetch(`${baseUrl}/api/team`)).status, 401);
-  assert.equal((await fetch(`${baseUrl}/api/events`, {
-    headers: { Authorization: `Bearer ${'b'.repeat(64)}` },
-  })).status, 401);
-});
-
-test('browser authorization preflight allows only configured origins', async () => {
-  const request = (origin) => fetch(`${baseUrl}/api/team`, {
-    method: 'OPTIONS',
-    headers: { Origin: origin, 'Access-Control-Request-Headers': 'authorization' },
+test('writes from another origin are refused', async () => {
+  const res = await fetch(`${t.base}/api/v1/auth/logout`, { method: 'POST', headers: { Origin: 'https://evil.example', Cookie: c.cookie() } });
+  assert.equal(res.status, 403);
+  const preflight = await fetch(`${t.base}/api/v1/me`, {
+    method: 'OPTIONS', headers: { Origin: ORIGIN, 'Access-Control-Request-Headers': 'content-type' },
   });
-  const allowed = await request('http://localhost:5173');
-  assert.equal(allowed.status, 204);
-  assert.equal(allowed.headers.get('access-control-allow-headers'), 'Authorization');
-  assert.equal((await request('http://localhost:5174')).status, 403);
+  assert.equal(preflight.status, 204);
 });
 
-test('server cannot start without a configured token', () => {
-  assert.throws(() => createApp(), /MBOT2_API_TOKEN/);
-});
-
-test('websocket authenticates before upgrade and never echoes the token', async () => {
-  const url = baseUrl.replace('http:', 'ws:') + '/ws/telemetry';
-  const unauthorized = new WebSocket(url);
-  await new Promise((resolve, reject) => {
-    unauthorized.once('error', reject);
-    unauthorized.once('open', () => {
-      unauthorized.close();
-      reject(new Error('anonymous socket accepted'));
-    });
-    unauthorized.once('unexpected-response', (_request, response) => {
-      response.resume();
-      if (response.statusCode === 401) resolve();
-      else reject(new Error(`unexpected status ${response.statusCode}`));
-    });
-  });
-  const client = new WebSocket(url, ['mbot2.telemetry.v1', `mbot2.token.${token}`]);
-  try {
-    await new Promise((resolve, reject) => {
-      client.once('open', resolve);
-      client.once('error', reject);
-    });
-    assert.equal(client.protocol, 'mbot2.telemetry.v1');
-  } finally {
-    client.close();
-  }
+test('unknown API path is a JSON 404', async () => {
+  const res = await c.get('/api/v1/nope');
+  assert.equal(res.status, 404);
+  assert.equal(res.body.error.code, 'NOT_FOUND');
 });
 
 test('lists topics discovered by ROS and reports an unavailable bridge', async () => {
-  assert.equal((await fetch(`${baseUrl}/api/topics`, { headers })).status, 503);
+  assert.equal((await c.get('/api/v1/telemetry/topics')).status, 503);
   const topics = [{ name: '/maze_team/state', types: ['std_msgs/msg/String'] }];
-  app.store.setTopicReader(() => topics);
+  store().setTopicReader(() => topics);
   try {
-    const response = await fetch(`${baseUrl}/api/topics`, { headers });
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { items: topics });
+    assert.deepEqual((await c.get('/api/v1/telemetry/topics')).body, { items: topics });
   } finally {
-    app.store.setTopicReader(null);
+    store().setTopicReader(null);
   }
 });
 
 test('filters events by robot before applying the limit', async () => {
   for (const robot of ['mbot1', 'mbot2', 'mbot2']) {
-    app.store.ingest('/maze_team/report', JSON.stringify({ robot, type: 'BRANCH_REQUEST' }));
+    store().ingest('/maze_team/report', JSON.stringify({ robot, type: 'BRANCH_REQUEST' }));
   }
-  const response = await fetch(`${baseUrl}/api/events?robot=mbot1&limit=1`, { headers });
-  assert.equal(response.status, 200);
-  const { items } = await response.json();
+  const { items } = (await c.get('/api/v1/telemetry/events?robot=mbot1&limit=1')).body;
   assert.deepEqual(items.map(({ robot }) => robot), ['mbot1']);
-  assert.equal((await fetch(`${baseUrl}/api/events?robot=mbot1&robot=mbot2`, { headers })).status, 400);
+  assert.equal((await c.get('/api/v1/telemetry/events?robot=mbot1&robot=mbot2')).status, 400);
+});
+
+test('team reports and trails become readable log entries', async () => {
+  store().ingest('/maze_team/report', JSON.stringify({ robot: 'mbot2', type: 'BLOCKED' }));
+  store().ingest('/mbot1/trail', JSON.stringify({ robot: 'mbot1', status: 'JUNCTION', segment_id: 4 }));
+  const items = (await c.get('/api/v1/telemetry/logs')).body.items.slice(-2);
+  assert.deepEqual(items.map(({ ns, level, kind }) => [ns, level, kind]), [['mbot2', 'warn', 'dead_end'], ['mbot1', 'info', 'junction']]);
 });
 
 test('reports goal discovery and the freshness of the team state', async () => {
-  const url = `${baseUrl}/api/goals`;
-  const initial = await fetch(url, { headers }).then((response) => response.json());
-  assert.equal(initial.found_count, 0);
-  assert.equal(initial.fresh, false);
   const goal = { robot: 'mbot3', x: -1, y: 2 };
-  app.store.ingest('/maze_team/state', JSON.stringify({ goal }));
-  const result = await fetch(url, { headers }).then((response) => response.json());
-  assert.equal(result.found, true);
+  store().ingest('/maze_team/state', JSON.stringify({ goal }));
+  const result = (await c.get('/api/v1/telemetry/goals')).body;
   assert.equal(result.found_count, 1);
   assert.equal(result.fresh, true);
   assert.deepEqual(result.items, [goal]);
@@ -115,24 +89,74 @@ test('reports goal discovery and the freshness of the team state', async () => {
 
 test('path API filters robots, separates interrupted tracks and resets on a new run', async () => {
   const frame = { east: '+x', north: '+y', distance_unit: 'm' };
-  const ingest = (run_id, robots) =>
-    app.store.ingest('/maze_team/state', JSON.stringify({ run_id, map_frame: frame, robots }));
+  const ingest = (run_id, robots) => store().ingest('/maze_team/state', JSON.stringify({ run_id, map_frame: frame, robots }));
   const point = (x, y) => ({ x, y });
-  const read = async (query = '') => {
-    const response = await fetch(baseUrl + '/api/paths' + query, { headers });
-    assert.equal(response.status, 200);
-    return response.json();
-  };
-
   ingest('first', { mbot1: point(0, 0), mbot2: point(0, 1) });
   ingest('first', { mbot1: point(0.01, 0), mbot2: point(0, 1) });
   ingest('first', { mbot2: point(0, 2) });
   ingest('first', { mbot1: point(1, 0), mbot2: point(0, 2) });
-  assert.deepEqual(await read('?robot=mbot1'), {
+  assert.deepEqual((await c.get('/api/v1/telemetry/paths?robot=mbot1')).body, {
     run_id: 'first', map_frame: frame, robots: { mbot1: [[0, 0], null, [1, 0]] },
   });
-  assert.deepEqual((await read()).robots.mbot2, [[0, 1], [0, 2]]);
-  assert.equal((await fetch(baseUrl + '/api/paths')).status, 401);
+  assert.deepEqual((await c.get('/api/v1/telemetry/paths')).body.robots.mbot2, [[0, 1], [0, 2]]);
   ingest('second', { mbot1: point(3, 3) });
-  assert.deepEqual((await read()).robots, { mbot1: [[3, 3]] });
+  assert.deepEqual((await c.get('/api/v1/telemetry/paths')).body.robots, { mbot1: [[3, 3]] });
+});
+
+function openSocket(cookie, origin = ORIGIN) {
+  const ws = new WebSocket(`${t.base.replace('http:', 'ws:')}/ws/telemetry`, ['mbot2.telemetry.v1'], {
+    headers: { Origin: origin, ...(cookie ? { Cookie: cookie } : {}) },
+  });
+  return new Promise((resolve) => {
+    const messages = [];
+    ws.on('message', (data) => messages.push(JSON.parse(data)));
+    ws.once('open', () => resolve({ ws, messages, status: 101 }));
+    ws.once('unexpected-response', (_req, res) => resolve({ ws, messages, status: res.statusCode }));
+    ws.once('error', () => resolve({ ws, messages, status: 0 }));
+  });
+}
+
+test('websocket: guests may watch; a dead session cookie is refused', async () => {
+  const guest = await openSocket(null);
+  assert.equal(guest.status, 101);
+  guest.ws.close();
+  assert.equal((await openSocket('sid=not-a-real-session-token-xxxxx')).status, 401);
+  const { ws, messages, status } = await openSocket(c.cookie());
+  assert.equal(status, 101);
+  await new Promise((r) => setTimeout(r, 50));
+  assert.equal(messages[0].type, 'hello');
+  const snapshot = messages.find((m) => m.type === 'snapshot');
+  assert.ok(snapshot.sim && snapshot.mission && snapshot.map && snapshot.health);
+  assert.equal(snapshot.sim.state, 'idle');
+  ws.close();
+});
+
+test('suspended user socket rejected and closed', async () => {
+  const user = await makeUser(t.db, 'sock');
+  const s = await loggedIn(t.base, user);
+  const { ws, status } = await openSocket(s.cookie());
+  assert.equal(status, 101);
+  const closed = new Promise((resolve) => ws.once('close', (code) => resolve(code)));
+  t.db.prepare("UPDATE users SET status = 'suspended' WHERE id = ?").run(user.id);
+  // ทำให้รอบตรวจ session ถัดไปเกิดทันที
+  const original = Date.now;
+  Date.now = () => original() + 60000;
+  try { t.app.broadcast(); } finally { Date.now = original; }
+  assert.equal(await closed, 4401);
+  assert.equal((await openSocket(s.cookie())).status, 401);
+});
+
+test('maintenance mode blocks members but not admins', async () => {
+  const admin = await makeUser(t.db, 'boss', { role: 'admin' });
+  const a = await loggedIn(t.base, admin);
+  setSettings(t.db, { maintenance: true });
+  try {
+    assert.equal((await c.get('/api/v1/missions')).status, 503);
+    assert.equal((await c.get('/api/v1/missions')).body.error.code, 'MAINTENANCE');
+    assert.equal((await c.get('/api/v1/me')).status, 200);
+    assert.equal((await client(t.base).get('/api/v1/site')).body.maintenance, true);
+    assert.equal((await a.get('/api/v1/missions')).status, 200);
+  } finally {
+    setSettings(t.db, { maintenance: false });
+  }
 });

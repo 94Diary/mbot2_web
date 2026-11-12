@@ -1,0 +1,244 @@
+/* ===== ชั้นดีไซน์จาก canvas “mBot2 Maze Ops — UI” (ลายเส้นจากตัวหุ่น) =====
+   โหลดหลัง tokens/base/components/layouts จึง override ให้หน้าตาตรงดีไซน์ */
+.theme-dark { --panel-2: rgba(42, 47, 55, 0.8); --robot: #1a1e25; --robot-2: #151920; --robot-3: #101318; --header-bg: rgba(18, 20, 23, 0.72); --perf: rgba(255, 255, 255, 0.05); --chip-line: #eef1f5; --muted-line: #5e6672; --path: #e6e9ee; }
+.theme-light { --panel-2: rgba(255, 255, 255, 0.9); --robot: #ffffff; --robot-2: #eef1f4; --robot-3: #dadfe5; --header-bg: rgba(232, 235, 239, 0.78); --perf: rgba(20, 22, 26, 0.07); --chip-line: #c3cbd4; --muted-line: #96a0ab; --path: #14161a; }
+
+/* แผ่นเจาะรูของตัวถัง = พื้นหลังลายจุดทั้งเว็บ */
+.dz { background-color: var(--bg); background-image: radial-gradient(circle, var(--perf) 1.6px, transparent 2px); background-size: 20px 20px; background-attachment: fixed; }
+::selection { background: var(--orange); color: #07080a; }
+:where(.dz) a:hover { color: var(--ink); }
+svg path, svg polyline, svg rect { stroke-linejoin: round; }
+:where(.dz) .card, .zone { backdrop-filter: blur(14px) saturate(1.15); -webkit-backdrop-filter: blur(14px) saturate(1.15); }
+
+/* ปุ่มแคปซูล: ปุ่มรองสีขาวพลาสติก · ส้มเฉพาะปุ่มหลัก · แดงเฉพาะหยุด */
+:where(.dz) .btn { background: var(--chip); color: var(--chip-ink); border-color: var(--chip-line); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.12); transition: transform 0.3s var(--ease-out), background 0.2s; }
+:where(.dz) .btn:hover { color: var(--chip-ink); }
+:where(.dz) .btn.primary, :where(.dz) .btn.blue, :where(.dz) .btn.danger { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.12); }
+:where(.dz) .btn.primary:hover { color: #14161a; }
+:where(.dz) .btn.blue:hover, :where(.dz) .btn.danger:hover { color: #fff; }
+:where(.dz) .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); box-shadow: none; }
+:where(.dz) .btn.ghost:hover { color: var(--ink); }
+:where(.dz) .btn.ghostDanger { background: transparent; color: var(--red-ink); border-color: var(--line-strong); box-shadow: none; }
+:where(.dz) .btn:active { transform: translateY(1px); }
+:where(.dz) .seg { background: var(--robot-2); }
+
+/* โซน = แผงอะคริลิกควันพร้อมหัวแผง */
+.zone { border: 1px solid var(--line); border-radius: 22px; background: var(--panel); min-width: 0; }
+.zone-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line-2); flex-wrap: wrap; }
+.zone-t { margin: 0; font-family: var(--font-head); font-weight: 600; font-size: 18px; }
+.zone-k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-4); text-transform: uppercase; }
+.zone-b { padding: 16px 18px; }
+.chipbtn { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink-2); transition: background 0.2s, border-color 0.2s, transform 0.2s; }
+.chipbtn:hover { transform: translateY(-1px); }
+.chipbtn[aria-pressed='true'] { background: var(--chip); color: var(--chip-ink); border-color: var(--chip-line); }
+.logrow { transition: background 0.2s; }
+.logrow:hover { background: var(--line-2); }
+.stat-k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-4); text-transform: uppercase; }
+.stat-v { font-family: var(--font-head); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; margin: 0; }
+
+/* การ์ดที่กดได้: ยกตัว + ลูกศรเลื่อน */
+.botcard2, .runcard { transition: transform 0.3s var(--ease-out), border-color 0.2s, box-shadow 0.3s; color: var(--ink); text-decoration: none; }
+.botcard2:hover { transform: translateY(-3px); border-color: var(--line-strong); color: var(--ink); }
+.runcard:hover { transform: translateY(-4px); border-color: var(--line-strong); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18); color: var(--ink); }
+.botcard2 .go, .runcard .go { color: var(--ink-4); transition: transform 0.3s var(--ease-out), color 0.2s; }
+.botcard2:hover .go { transform: translateX(4px); color: var(--ink); }
+.runcard:hover .go { transform: translateX(5px); }
+.tile { transition: transform 0.35s var(--ease-out), border-color 0.25s; }
+.tile:hover { transform: translateY(-4px); border-color: var(--blue); }
+.card.lift { transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out); }
+.card.lift:hover { transform: translateY(-3px); border-color: var(--muted-line); }
+
+/* แถบเติม · จุดกะพริบ · ลอย · แผงเลื่อนเข้า */
+@keyframes barfill { from { width: 0; } }
+.bar-in { animation: barfill 0.7s var(--ease-out); }
+@keyframes glow2 { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.led { animation: glow2 1.6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-8px); } }
+.bob { animation: bob 6s ease-in-out infinite; }
+@keyframes panelIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+.panel-in { animation: panelIn 320ms var(--ease-out); }
+.fadeup { animation: fadeup 0.35s var(--ease-out); }
+@keyframes draw { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
+.trace { stroke-dasharray: 900; animation: draw 6s var(--ease-out) infinite alternate; }
+@keyframes drift { to { stroke-dashoffset: -60; } }
+.trail { stroke-dasharray: 6 6; animation: drift 3s linear infinite; }
+
+/* ปุ่มวงจร (หน้าแรก): hover แล้วมีวงเส้นประวิ่งรอบ + ขาวงจร 4 ทิศ */
+.cbtn { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 26px; border-radius: 999px; text-decoration: none; font-family: var(--font-head); font-weight: 600; font-size: 17px; white-space: nowrap; transition: transform 0.3s var(--ease-out); border: none; cursor: pointer; }
+.cb-primary { background: var(--orange); color: #14161a; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.15); }
+.cb-primary:hover { color: #14161a; }
+.cb-chip { background: var(--chip); color: var(--chip-ink); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px var(--chip-line); }
+.cb-chip:hover { color: var(--chip-ink); }
+.cb-ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+.cbtn:hover { transform: translateY(-2px); }
+.cbtn:active { transform: translateY(1px) scale(0.98); }
+.cbtn .arr { transition: transform 0.35s var(--ease-out); }
+.cbtn:hover .arr { transform: translateX(4px); }
+.cb-ring { position: absolute; left: -7px; top: -7px; width: calc(100% + 14px); height: 70px; overflow: visible; pointer-events: none; }
+.cb-ring rect { fill: none; stroke: var(--blue-ink); stroke-width: 1.5; stroke-dasharray: 0.14 0.06; opacity: 0; transition: opacity 0.3s; }
+.cbtn:hover .cb-ring rect { opacity: 0.95; animation: cbflow 5s linear infinite; }
+@keyframes cbflow { to { stroke-dashoffset: -1; } }
+.cb-t { position: absolute; background: var(--blue-ink); pointer-events: none; transition: transform 0.4s var(--ease-out), background 0.2s; }
+.cb-t::after { content: ''; position: absolute; width: 8px; height: 8px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--blue-ink); background: var(--bg); }
+.cb-l { right: 100%; top: calc(50% - 0.75px); width: 20px; height: 1.5px; margin-right: 7px; transform: scaleX(0); transform-origin: right; }
+.cb-l::after { left: -8px; top: -3.25px; }
+.cb-r { left: 100%; top: calc(50% - 0.75px); width: 20px; height: 1.5px; margin-left: 7px; transform: scaleX(0); transform-origin: left; }
+.cb-r::after { right: -8px; top: -3.25px; }
+.cb-u { bottom: 100%; left: 26%; width: 1.5px; height: 14px; margin-bottom: 7px; transform: scaleY(0); transform-origin: bottom; }
+.cb-u::after { top: -8px; left: -3.25px; }
+.cb-d { top: 100%; left: 70%; width: 1.5px; height: 14px; margin-top: 7px; transform: scaleY(0); transform-origin: top; }
+.cb-d::after { bottom: -8px; left: -3.25px; }
+.cbtn:hover .cb-t { transform: scale(1); }
+.cbtn:hover .cb-r, .cbtn:hover .cb-d { transition-delay: 0.08s; }
+.cbtn.is-go .cb-t { transform: scale(1); background: var(--orange); }
+.cbtn.is-go .cb-t::after { border-color: var(--orange); background: var(--orange); }
+.cbtn.is-go .cb-ring rect { opacity: 1; stroke: var(--orange); stroke-width: 2; animation: cbjoin 0.4s var(--ease-out) forwards; }
+@keyframes cbjoin { from { stroke-dasharray: 0.14 0.06; } to { stroke-dasharray: 1 0; } }
+.cbtn.is-go { animation: cbpulse 0.5s ease-out; }
+@keyframes cbpulse { 40% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--orange) 25%, transparent); } }
+
+/* ป้ายชี้ชิ้นส่วนบนโมเดล 3D (hotspot) */
+.hs { position: absolute; text-decoration: none; z-index: 2; }
+.hs-dot { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 3px var(--bg); }
+.hs-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--orange); animation: hsping 2.4s ease-out infinite; }
+@keyframes hsping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+.hs-lab { position: absolute; white-space: nowrap; padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); font-size: 14px; font-weight: 500; transition: background 0.2s, color 0.2s; }
+.hs:hover .hs-lab { background: var(--orange); color: #14161a; border-color: var(--orange); }
+.hs-line { position: absolute; height: 1.5px; background: var(--line-strong); }
+
+/* เลื่อนหน้า: หัวข้อพับหาย · การ์ดลอยขึ้นตามลำดับ (เฉพาะเบราว์เซอร์ที่รองรับ scroll timeline) */
+@supports (animation-timeline: view()) {
+  .fold { transform-origin: 50% 100%; animation: foldaway linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+  @keyframes foldaway { to { transform: perspective(1600px) rotateX(38deg) scale(0.9); filter: brightness(0.55) blur(2px); opacity: 0.15; } }
+  .rise { animation: riseup linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+  @keyframes riseup { from { opacity: 0; translate: 0 70px; scale: 0.96; } to { opacity: 1; translate: 0 0; scale: 1; } }
+  .stag > * { animation: riseup linear both; animation-timeline: view(); animation-range: entry 5% entry 70%; }
+  .stag > *:nth-child(2) { animation-range: entry 12% entry 78%; }
+  .stag > *:nth-child(3) { animation-range: entry 19% entry 86%; }
+  .stag > *:nth-child(4) { animation-range: entry 26% entry 94%; }
+}
+
+/* ฉากเปลี่ยนหน้า: เส้นวงจรวิ่งพาดจอแล้วเปิดเผยหน้าใหม่ */
+.pt-in { position: fixed; inset: 0; z-index: 200; pointer-events: none; background: var(--bg); animation: ptin-bg 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.18s both; }
+.pt-in path { stroke-dasharray: 1 1; stroke-dashoffset: 0; animation: ptin-line 0.55s cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes ptin-bg { to { opacity: 0; visibility: hidden; } }
+@keyframes ptin-line { to { stroke-dashoffset: -1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-in, .fold, .rise, .stag > *, .bob, .hs-dot::after, .trace, .trail, .led { animation: none !important; }
+  .pt-in { display: none; }
+  .trace { stroke-dasharray: none; }
+}
+
+/* ===== shells ===== */
+.dhdr { position: sticky; top: 0; z-index: 30; background: var(--header-bg); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px) saturate(1.15); }
+.dhdr .in { max-width: 1440px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.dnav { display: flex; flex-wrap: wrap; gap: 2px; font-size: 15px; }
+.dnav a { padding: 8px 12px; border-radius: 10px; color: var(--ink-3); text-decoration: none; }
+.dnav a.active { color: var(--ink); background: var(--raise); font-weight: 600; }
+.dsearch { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line-strong); color: var(--ink-3); min-width: 200px; box-sizing: border-box; }
+.dsearch input { border: none; background: transparent; color: var(--ink); font: inherit; font-size: 14px; outline: none; width: 100%; }
+.sqbtn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--chip); color: var(--chip-ink); display: grid; place-items: center; flex: none; cursor: pointer; }
+.consolebtn { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 12px; background: var(--orange); color: #07080a; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.consolebtn:hover { color: #07080a; }
+.avbtn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--orange); color: #07080a; font-family: var(--font-head); font-weight: 700; font-size: 16px; cursor: pointer; display: grid; place-items: center; }
+.avbtn.guest { background: var(--raise); color: var(--ink-2); border: 1px solid var(--line-strong); }
+@container app (max-width: 1100px) { .dsearch { display: none; } }
+@container app (max-width: 900px) { .dnav { display: none; } .consolebtn span { display: none; } }
+
+.dftr { border-top: 1px solid var(--line); margin-top: auto; }
+.dftr .in { max-width: 1440px; margin: 0 auto; padding: 28px 24px; display: flex; flex-wrap: wrap; gap: 16px 40px; justify-content: space-between; align-items: flex-start; }
+.dftr nav { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; }
+.dftr nav a, .dftr nav button { color: var(--ink-2); text-decoration: underline; background: none; border: none; font: inherit; cursor: pointer; padding: 0; }
+
+/* หัวหน้าคอนโซล/หลังบ้าน */
+.chead { border-bottom: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(14px) saturate(1.15); }
+.chead .in { max-width: 1440px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+.chead h1 { font-family: var(--font-head); font-weight: 600; font-size: 19px; }
+.chead.big h1 { font-size: 24px; font-weight: 700; }
+.logobox { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line-strong); display: grid; place-items: center; color: var(--ink); flex: none; background: var(--panel); }
+.backpill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); text-decoration: none; font-weight: 600; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12); }
+.backpill:hover { color: var(--chip-ink); }
+.adminpill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 13px; font-weight: 600; }
+.cmain { flex: 1 1 auto; width: 100%; max-width: 1440px; margin: 0 auto; padding: 20px 24px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; }
+@container app (max-width: 700px) { .cmain, .chead .in, .dhdr .in { padding-left: 16px; padding-right: 16px; } }
+
+/* แถบล่างคอนโซล */
+.cbar { position: sticky; bottom: 0; z-index: 25; margin-top: auto; border-top: 1px solid var(--line); background: var(--header-bg); backdrop-filter: blur(14px) saturate(1.15); }
+.cbar nav { max-width: 1440px; margin: 0 auto; padding: 6px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cbar a.item, .cbar button.item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 12px; text-decoration: none; min-height: 44px; box-sizing: border-box; color: var(--ink-3); background: none; border: none; font: inherit; cursor: pointer; }
+.cbar a.item.active { background: var(--raise); color: var(--ink); font-weight: 600; }
+.cbar .exit { display: flex; align-items: center; gap: 8px; padding: 0 18px; border-radius: 999px; min-height: 44px; background: var(--chip); color: var(--chip-ink); text-decoration: none; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12); }
+.viewswitch { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--robot-2); margin-right: 6px; }
+.viewswitch a { display: flex; align-items: center; min-height: 34px; padding: 0 14px; border-radius: 999px; text-decoration: none; font-size: 14px; color: var(--ink-2); }
+.viewswitch a.active { background: var(--chip); color: var(--chip-ink); font-weight: 600; }
+.cbar .who { font-size: 13px; color: var(--ink-4); }
+.morewrap { position: relative; }
+.moremenu { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 240px; background: var(--solid); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-menu); padding: 8px; display: flex; flex-direction: column; z-index: 40; }
+.moremenu a { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; color: var(--ink); text-decoration: none; font-size: 14.5px; }
+.moremenu a:hover, .moremenu a.active { background: var(--line-2); }
+@container app (max-width: 900px) {
+  .cbar nav { gap: 2px; padding: 6px 10px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .cbar .lbl, .cbar .who { display: none; }
+}
+
+/* ตัวบอกขั้น 1-2-3 */
+.stepper { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+.stepper li { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--ink-2); }
+.stepper .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 2px solid var(--line-strong); color: var(--ink-2); }
+.stepper li.now .n { background: var(--orange); border-color: var(--orange); color: #14161a; }
+.stepper li.now { color: var(--ink); font-weight: 700; }
+.stepper li.done .n { background: var(--go); border-color: var(--go); color: #07080a; }
+.stepper .ln { width: 48px; height: 2px; background: var(--line-strong); }
+@container app (max-width: 900px) { .stepper .ln, .stepper .t { display: none; } }
+
+/* แถบล่างของแต่ละขั้น (ถัดไป) */
+.stepfoot { position: sticky; bottom: 57px; z-index: 24; border-top: 1px solid var(--line); background: var(--panel); }
+.stepfoot .in { max-width: 1440px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.nextbtn { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 24px; border-radius: 999px; font-family: var(--font-head); font-weight: 700; font-size: 16px; text-decoration: none; border: none; cursor: pointer; background: var(--raise); color: var(--ink-3); }
+.nextbtn.ready { background: var(--orange); color: #14161a; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.nextbtn.ready:hover { color: #14161a; }
+.nextbtn[aria-disabled='true'] { pointer-events: none; }
+
+/* ช่วงภารกิจ (pill steps) */
+.phases { list-style: none; margin: 0; padding: 4px; display: flex; gap: 4px; border-radius: 999px; background: var(--robot-2); border: 1px solid var(--line); flex-wrap: wrap; }
+.phases li { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 13.5px; color: var(--ink-2); }
+.phases li .pd { width: 7px; height: 7px; border-radius: 50%; background: var(--go); }
+.phases li.now { background: var(--chip); color: var(--chip-ink); font-weight: 600; }
+.phases li.now .pd { background: var(--orange); }
+.phases li.todo { color: var(--ink-4); }
+.phases li.todo .pd { background: transparent; border: 1.5px solid var(--ink-4); }
+
+/* การ์ดหุ่นในศูนย์ควบคุม: ขอบบนเป็นสีหุ่น */
+.teamcard { position: relative; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); padding: 18px 18px 16px; display: flex; gap: 14px; align-items: center; overflow: hidden; }
+.teamcard::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--bc); border-radius: 22px 22px 0 0; }
+.botsq { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: #14161a; flex: none; }
+.battbar { height: 8px; border-radius: 99px; background: var(--raise); overflow: hidden; flex: 1; max-width: 120px; }
+.battbar > i { display: block; height: 100%; border-radius: inherit; }
+.modepill { display: inline-flex; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--blue-soft); color: var(--blue-ink); }
+.modepill.cut { background: var(--orange-soft); color: var(--orange-soft-ink); }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+/* hotspot ที่เกาะชิ้นส่วนบนโมเดล 3D: ป้ายอยู่ด้านนอกตามฝั่งของชิ้นส่วน */
+.hs3d { transition: opacity 0.2s; }
+.hs3d .hs-line { top: -0.75px; width: 46px; }
+.hs3d .hs-lab { top: -17px; }
+.hs3d[data-side='left'] .hs-line { right: 7px; }
+.hs3d[data-side='left'] .hs-lab { right: 53px; }
+.hs3d[data-side='right'] .hs-line { left: 7px; }
+.hs3d[data-side='right'] .hs-lab { left: 53px; }
+@container app (max-width: 1100px) { .robotpage { grid-template-columns: minmax(0, 1fr) !important; } }
+.lessongrid { display: grid; grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(240px, 280px); gap: 18px; align-items: start; }
+@container app (max-width: 1100px) { .lessongrid { grid-template-columns: minmax(200px, 240px) minmax(0, 1fr); } .lessongrid > aside { grid-column: 1 / -1; position: static !important; } }
+@container app (max-width: 760px) { .lessongrid { grid-template-columns: minmax(0, 1fr); } .lessongrid > nav { position: static !important; } }
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+@container app (max-width: 1000px) { .mapgrid { grid-template-columns: minmax(0, 1fr); } .mapgrid > aside { border-left: none !important; border-top: 1px solid var(--line-2); } }
+.settingsgrid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; }
+@container app (max-width: 800px) { .settingsgrid { grid-template-columns: minmax(0, 1fr); } .settingsgrid > nav { position: static !important; } }
+.userslayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 18px; }
+@container app (max-width: 1000px) { .userslayout { grid-template-columns: minmax(0, 1fr); } }
+table.t tr.selrow td { background: var(--orange-soft); }
+table.t tr.selrow td:first-child { box-shadow: inset 3px 0 0 var(--orange); }
+.dashgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
+@container app (max-width: 1000px) { .dashgrid { grid-template-columns: minmax(0, 1fr); } }
+@keyframes barup { from { transform: scaleY(0); } }
+.bar-grow { transform-origin: bottom; animation: barup 0.7s var(--ease-out); }

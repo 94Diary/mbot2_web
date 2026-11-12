@@ -1,3 +1,5 @@
+import { rosoutLogEntry } from './logs.js';
+
 // rclnodejs is loaded only at runtime in Ubuntu after ROS 2 has been sourced.
 // This keeps API/store tests runnable without Gazebo or native ROS libraries.
 export function formatTelemetryLog(topic, raw) {
@@ -48,12 +50,14 @@ export async function startRosBridge(store, robotNames = ['mbot1', 'mbot2', 'mbo
     }
     const recent = new Map();
     node.createSubscription('rcl_interfaces/msg/Log', '/rosout', (message) => {
-      const line = formatRobotLog(message, robotNames);
+      const entry = rosoutLogEntry(message, robotNames);
+      const line = entry && formatRobotLog(message, robotNames);
       if (line) {
         const now = Date.now();
         const previous = recent.get(line);
         if (previous !== undefined && now - previous < 5000) return;
         recent.set(line, now);
+        store.addLog(entry);
         for (const [key, at] of recent) if (now - at > 5000) recent.delete(key);
         console.log(line);
       }
