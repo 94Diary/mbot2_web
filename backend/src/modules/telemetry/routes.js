@@ -1,10 +1,19 @@
 import { Router } from 'express';
 
+function validRobot(robot) {
+  return robot === null || (typeof robot === 'string' && robot.trim().length > 0);
+}
+
 export function createTelemetryRouter(store) {
   const router = Router();
 
   router.get('/health', (_req, res) => res.json(store.health()));
   router.get('/team', (_req, res) => res.json(store.team()));
+  router.get('/paths', (req, res) => {
+    const robot = req.query.robot ?? null;
+    if (!validRobot(robot)) return res.status(400).json({ error: 'robot must be a single non-empty name' });
+    return res.json(store.paths.read(robot));
+  });
   router.get('/goals', (_req, res) => res.json(store.goals()));
   router.get('/topics', (_req, res) => {
     try {
@@ -23,7 +32,7 @@ export function createTelemetryRouter(store) {
       return res.status(400).json({ error: 'limit must be 1-200 and after_id must be a non-negative integer' });
     }
     const robot = req.query.robot ?? null;
-    if (robot !== null && (typeof robot !== 'string' || !robot.trim())) {
+    if (!validRobot(robot)) {
       return res.status(400).json({ error: 'robot must be a single non-empty name' });
     }
     return res.json({ items: store.events(limit, afterId, robot) });
